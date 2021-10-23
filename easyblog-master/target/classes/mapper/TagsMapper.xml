@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heriec.easyblogmaster.dao.TagsDao">
+    <resultMap id="TagsMapper" type="tags">
+        <id column="id" property="id"/>
+        <id column="tagName" property="tagName"/>
+    </resultMap>
+
+    <select id="getAllTags" resultMap="TagsMapper">
+        select * from tags
+    </select>
+
+    <insert id="addTags" parameterType="String" keyProperty="id" useGeneratedKeys="true">
+        insert into tags(tagName)
+        values
+        <foreach collection="tags" item="tag" separator=",">
+            (#{tag})
+        </foreach>
+    </insert>
+
+    <select id="getTagsByTagName" parameterType="String" resultType="long">
+        select id
+        from tags
+        where tagName in
+        <foreach collection="tagNames" item="tagName" separator="," open="(" close=")">
+            #{tagName}
+        </foreach>
+    </select>
+
+    <insert id="addTagsForArticle">
+        insert
+        into article_tags(aid,tid) values
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (#{aid},#{tagId})
+        </foreach>
+    </insert>
+
+    <delete id="deleteTagsByAid" parameterType="long">
+        delete
+        from article_tags
+        where aid = #{aid}
+    </delete>
+
+    <delete id="deleteTagsById" >
+        delete
+        from tags
+        where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </delete>
+
+    <update id="updateTagById" parameterType="tags">
+        update tags
+        set tagName = #{tagName}
+        where id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heriec.easyblogmaster.dao.ArticleDao">
+
+    <resultMap id="ArticleMapper" type="article">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="cid" property="cid"/>
+        <result column="uid" property="uid"/>
+        <result column="publishDate" property="publishDate"/>
+        <result column="editTime" property="editTime"/>
+        <result column="state" property="state"/>
+        <result column="pageView" property="pageView"/>
+        <result column="mdContent" property="mdContent"/>
+        <result column="htmlContent" property="htmlContent"/>
+        <result column="summary" property="summary"/>
+        <result column="nickname" property="nickname"/>
+        <result column="cateName" property="cateName"/>
+        <collection property="tags" javaType="list" ofType="Tags">
+            <result column="tid" property="id"/>
+            <result column="tagName" property="tagName"/>
+        </collection>
+    </resultMap>
+
+    <insert id="addArticle" parameterType="article" useGeneratedKeys="true" keyProperty="id">
+        insert into article
+        set title=#{title}, mdContent=#{mdContent}, htmlContent=#{htmlContent}, summary=#{summary}, cid=#{cid}, uid=#{uid}, publishDate=#{publishDate}, state =#{state}, editTime=#{editTime}
+    </insert>
+
+    <update id="updateArticle" parameterType="article">
+        update article
+        SET title=#{title},
+        mdContent=#{mdContent},
+        htmlContent=#{htmlContent},
+        summary=#{summary},
+        cid=#{cid},
+        editTime=#{editTime}
+        <if test="state==1">
+            ,state=1
+        </if>
+        <if test="publishDate!=null">
+            ,publishDate=#{publishDate}
+        </if>
+        WHERE id=#{id}
+    </update>
+
+    <select id="getArticleByState" resultMap="ArticleMapper">
+        select a.*, u.`nickname`, c.`cateName`
+        from article a,
+        user u,
+        category c
+        where a.uid = u.id
+        and a.cid = c.id
+        <if test="state!=-2">
+            and a.uid=#{uid}
+        </if>
+        <if test="state!=-1 and state!=-2">
+            and a.state=#{state}
+        </if>
+        <if test="state==-2">
+            and a.state=1
+        </if>
+        <if test="keywords!=null">
+            AND title LIKE concat('%',#{keywords},'%')
+        </if>
+        order by a.editTime desc limit #{start},#{count}
+    </select>
+
+    <select id="getArticleCountByState" resultType="int">
+        SELECT count(*) FROM article
+        <where>
+            <if test="state!=-1">
+                AND state=#{state}
+            </if>
+            <if test="uid!=null">
+                AND uid=#{uid}
+            </if>
+            <if test="keywords!=null">
+                AND title LIKE concat('%',#{keywords},'%')
+            </if>
+        </where>
+    </select>
+
+    <update id="updateArticleState">
+        update article
+        set state =#{state}
+        where id in
+        <foreach collection="aids" item="aid" separator="," open="(" close=")">
+            #{aid}
+        </foreach>
+    </update>
+
+    <update id="updateArticleStateByAid">
+        UPDATE article
+        SET state=#{state}
+        WHERE id = #{aid}
+    </update>
+
+    <delete id="deleteArticleById" parameterType="long">
+        delete from article where id in
+        <foreach collection="aids " item="aid" open="(" close=")" separator=",">
+            #{aid}
+        </foreach>
+    </delete>
+
+    <select id="getArticleByAid" parameterType="long" resultMap="ArticleMapper">
+        select a.*, u.`nickname`, c.`cateName`, t.tagName, t.id tid, u.nickname, c.cateName
+        from category c,
+             article a
+                 left join article_tags at
+        on at.aid = a.id
+            left join user u on a.uid=u.id
+            left join tags t on at.tid=t.id
+        where a.cid= c.id and a.id = #{aid}
+
+    </select>
+</mapper>

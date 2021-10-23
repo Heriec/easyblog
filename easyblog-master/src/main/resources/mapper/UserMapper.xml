@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heriec.easyblogmaster.dao.UserDao">
+    <resultMap id="UserMapper" type="user">
+        <result property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="nickname" column="nickname"/>
+        <result property="password" column="password"/>
+        <result property="enabled" column="enabled"/>
+        <result property="email" column="email"/>
+        <result property="userface" column="userface"/>
+        <result property="regTime" column="regTime"/>
+        <collection property="roles" ofType="role" javaType="List">
+            <result property="id" column="rid"/>
+            <result property="name" column="rname"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryUserByUsername" resultMap="UserMapper">
+        select *
+        from user
+        where username = #{username}
+    </select>
+
+    <update id="updateUserEmail">
+        update user
+        set email = #{email}
+        where id = #{id}
+    </update>
+
+    <select id="getUserByNickname" resultMap="UserMapper">
+        select u.*, r.id rid, r.name rname
+        from user u,
+        roles r,
+        roles_user ru
+        where u.id = ru.uid
+        and r.id = ru.rid and u.id not in (select u.id
+        from user u,
+        roles_user ru
+        where u.id = ru.uid and ru.rid = 1)
+        <choose>
+            <when test="nickname!=null and nickname!=''">
+                and u.nickname like concat('%',#{nickname},'%')
+            </when>
+            <otherwise>
+                ORDER BY u.`id` limit 20
+            </otherwise>
+        </choose>
+    </select>
+
+    <update id="updateUserEnabled">
+        update user
+        set enabled = #{enabled}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUserById">
+        delete
+        from user
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteUserRoleByUid">
+        delete
+        from roles_user
+        where uid = #{id}
+    </delete>
+
+    <delete id="setUserRole">
+        insert into roles_user(rid ,uid) values
+        <foreach collection="rids" separator="," item="rid">
+            (#{rid},#{id})
+        </foreach>
+    </delete>
+
+    <select id="getUserById" resultMap="UserMapper">
+        select u.*, r.id rid, r.name rname
+        from user u,
+             roles_user ru,
+             roles r
+        where u.id = ru.uid
+          and r.id = ru.rid
+          and u.id = #{id}
+    </select>
+
+    <insert id="login" useGeneratedKeys="true" keyProperty="id">
+        insert into user
+        set username = #{username}, password = #{password}, nickname = #{nickname}
+    </insert>
+</mapper>

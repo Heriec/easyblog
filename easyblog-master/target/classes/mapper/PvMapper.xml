@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heriec.easyblogmaster.dao.PvDao">
+    <resultMap id="PvMapper" type="pv">
+        <result property="id" column="id"/>
+        <result property="countDate" column="countDate"/>
+        <result property="pv" column="pv"/>
+        <result property="uid" column="uid"/>
+    </resultMap>
+
+    <update id="updateArticlePageView" parameterType="Long">
+        update article
+        set pageView = pageView + 1
+        where id = #{aid}
+    </update>
+
+    <select id="queryUserDayPv" resultType="long">
+        select count(*)
+        from article
+        where countDate > # {date1}
+          and #{date2} > pv.countDate
+          and uid = #{uid}
+    </select>
+
+    <select id="getUserDayArticleCount" resultType="String" parameterType="Long">
+        SELECT countDate
+        from pv
+        WHERE uid = #{uid}
+        ORDER by countDate limit 7
+    </select>
+
+    <select id="getDataStatistics" parameterType="long" resultType="int">
+        SELECT pv
+        from pv
+        WHERE uid = #{uid}
+        ORDER by countDate limit 7
+    </select>
+
+    <insert id="addPvForUserPerDay" keyProperty="id" useGeneratedKeys="true" parameterType="pv">
+        insert into pv(countDate, pv, uid)
+        values (#{countDate}, #{pv}, #{uid})
+    </insert>
+</mapper>

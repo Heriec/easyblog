@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.heriec.easyblogmaster.dao.RoleDao">
+
+    <resultMap id="RoleMapper" type="role">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+    </resultMap>
+    <select id="getAllRole" resultMap="RoleMapper">
+        select *
+        from roles
+    </select>
+
+    <insert id="addRoles" useGeneratedKeys="true" keyProperty="id">
+        insert into roles_user(rid,uid)
+        values
+        <foreach collection="roles" item="role" separator=",">
+            (#{role},#{uid})
+        </foreach>
+    </insert>
+
+    <select id="getRolesByUid" resultMap="RoleMapper">
+        select r.*
+        from roles r,
+             roles_user ru
+        where r.id = ru.rid
+          and ru.uid = #{uid}
+    </select>
+</mapper>
